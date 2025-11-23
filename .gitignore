@@ -33,6 +33,7 @@ Thumbs.db
 # Test results
 test_results.json
 *.json
+*.csv
 
 # Distribution / packaging
 dist/
