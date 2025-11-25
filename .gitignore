@@ -32,7 +32,7 @@ Thumbs.db
 
 # Test results
 test_results.json
-*.json
+flight_results.json
 *.csv
 
 # Distribution / packaging
