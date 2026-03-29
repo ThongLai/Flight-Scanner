@@ -253,8 +253,7 @@ class FlightsScraperSky:
                     'ret_layover_hours': return_transits['layover_hours'],
                     
                     # Additional
-                    'total_duration_min': (outbound.get('durationInMinutes', 0) + 
-                                        return_leg.get('durationInMinutes', 0)),
+                    'total_duration_min': (outbound.get('durationInMinutes', 0) + return_leg.get('durationInMinutes', 0)),
                     'total_stops': outbound.get('stopCount', 0) + return_leg.get('stopCount', 0),
                 }
                 
