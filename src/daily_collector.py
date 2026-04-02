@@ -10,7 +10,13 @@ from routes import TARGET_ROUTES, COLLECTION_CONFIG
 
 logger = logging.getLogger(__name__)
 
-DATA_DIR = Path("data/collected")
+# DATA_DIR = Path("data/collected")
+# CALENDAR_DIR = DATA_DIR / "calendars"
+# ITINERARY_DIR = DATA_DIR / "itineraries"
+
+# At the top of daily_collector.py, replace the DATA_DIR lines with:
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DATA_DIR = PROJECT_ROOT / "data" / "collected"
 CALENDAR_DIR = DATA_DIR / "calendars"
 ITINERARY_DIR = DATA_DIR / "itineraries"
 
