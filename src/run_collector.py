@@ -1,0 +1,34 @@
+import argparse
+import logging
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Flight price collector")
+    parser.add_argument(
+        "--mode",
+        choices=["once", "scheduled"],
+        default="scheduled",
+        help="Run once or start scheduler",
+    )
+    args = parser.parse_args()
+
+    if args.mode == "once":
+        from daily_collector import DailyCollector
+        collector = DailyCollector()
+        collector.run()
+    else:
+        from scheduler import start_scheduler
+        start_scheduler()
+
+
+if __name__ == "__main__":
+    main()
