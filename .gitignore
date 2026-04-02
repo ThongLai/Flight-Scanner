@@ -35,7 +35,7 @@ schedule.md
 # Test results
 test_results.json
 flight_results.json
-data/
+experiment_notebooks/data
 
 # Distribution / packaging
 dist/
