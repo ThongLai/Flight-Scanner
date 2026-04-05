@@ -1,5 +1,6 @@
 import argparse
 import logging
+import sys
 
 from dotenv import load_dotenv
 
@@ -18,20 +19,22 @@ def main():
         "--mode",
         choices=["once", "scheduled"],
         default="scheduled",
-        help="Run once or start scheduler",
     )
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force collection even if already collected today",
     )
     args = parser.parse_args()
 
     if args.mode == "once":
         from daily_collector import DailyCollector
         collector = DailyCollector()
-        collector.run(force=args.force)
+        healthy = collector.run(force=args.force)
+        if healthy is False:
+            sys.exit(1)  # this can trigger GitHub Actions failure email
     else:
+        from scheduler import start_scheduler
+        start_scheduler()
         from scheduler import start_scheduler
         start_scheduler()
 

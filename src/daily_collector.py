@@ -1,5 +1,3 @@
-"""Daily flight price collection pipeline."""
-
 import logging
 import time
 from datetime import date, datetime, timedelta
@@ -10,6 +8,7 @@ import pandas as pd
 
 from flight_scraper import FlightScraper
 from routes import TARGET_ROUTES, COLLECTION_CONFIG
+from alert import CollectionReport
 
 logger = logging.getLogger(__name__)
 
@@ -101,7 +100,7 @@ class DailyCollector:
         df.to_parquet(path, index=False)
         logger.info(f"Saved {len(df)} rows to {path}")
 
-    def run(self, force: bool = False):
+    def run(self, force: bool = False) -> bool:
         today = date.today()
         cal_path = CALENDAR_DIR / f"calendars_{today.strftime('%Y-%m-%d')}.parquet"
         if cal_path.exists() and not force:
@@ -113,14 +112,12 @@ class DailyCollector:
                 "Multiple runs per day may trigger API throttling."
             )
 
-
         start = datetime.utcnow()
         logger.info(f"Daily collection started at {start.isoformat()}")
 
+        report = CollectionReport()
         calendar_frames = []
         itinerary_frames = []
-        empty_count = 0
-        total_count = 0
 
         search_dates = [
             (today + timedelta(weeks=w)).strftime("%Y-%m-%d")
@@ -143,15 +140,16 @@ class DailyCollector:
             try:
                 cal_df = self.collect_route_calendar(origin, dest)
                 calendar_frames.append(cal_df)
+                report.log_calendar_success(route_label, len(cal_df))
                 logger.info(f"Calendar {route_label}: {len(cal_df)} days")
             except Exception as e:
+                report.log_error(f"Calendar {route_label} failed: {e}")
                 logger.error(f"Calendar {route_label} failed: {e}")
 
             time.sleep(DELAY_BETWEEN_SEARCHES)
 
             # Itineraries for each search date
             for j, sd in enumerate(search_dates):
-                total_count += 1
                 itin_df = pd.DataFrame()
 
                 for attempt in range(1 + MAX_RETRIES):
@@ -160,6 +158,9 @@ class DailyCollector:
                             origin, dest, sd
                         )
                     except Exception as e:
+                        report.log_error(
+                            f"Itineraries {route_label} ({sd}) error: {e}"
+                        )
                         logger.error(
                             f"Itineraries {route_label} ({sd}) failed: {e}"
                         )
@@ -168,6 +169,7 @@ class DailyCollector:
                         break
 
                     if attempt < MAX_RETRIES:
+                        report.log_retry()
                         logger.warning(
                             f"Itineraries {route_label} ({sd}): 0 results. "
                             f"Retrying in {RETRY_DELAY}s..."
@@ -175,13 +177,16 @@ class DailyCollector:
                         time.sleep(RETRY_DELAY)
 
                 if itin_df.empty:
-                    empty_count += 1
+                    report.log_itinerary_empty(route_label, sd)
                     logger.warning(
                         f"Itineraries {route_label} ({sd}): "
                         f"0 results after {1 + MAX_RETRIES} attempts"
                     )
                 else:
                     itinerary_frames.append(itin_df)
+                    report.log_itinerary_success(
+                        route_label, sd, len(itin_df)
+                    )
                     logger.info(
                         f"Itineraries {route_label} ({sd}): "
                         f"{len(itin_df)} results"
@@ -189,7 +194,6 @@ class DailyCollector:
 
                 if j < len(search_dates) - 1:
                     time.sleep(DELAY_BETWEEN_SEARCHES)
-
 
         if calendar_frames:
             all_cal = pd.concat(calendar_frames, ignore_index=True)
@@ -203,8 +207,9 @@ class DailyCollector:
         quota = self.scraper.get_quota_status()
         logger.info(
             f"Collection complete in {elapsed:.0f}s. "
-            f"Itinerary searches: {total_count - empty_count}/{total_count} "
-            f"returned results. "
             f"API remaining: {quota['api_remaining']}, "
             f"daily used: {quota['daily_used']}"
         )
+
+        # Alert
+        return report.check_and_alert()

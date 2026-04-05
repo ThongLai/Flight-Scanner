@@ -1,5 +1,3 @@
-"""Target route definitions for daily flight price collection."""
-
 TARGET_ROUTES = [
     # Primary routes: UK to Vietnam
     {
