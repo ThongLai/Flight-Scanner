@@ -1,5 +1,54 @@
 TARGET_ROUTES = [
-    # Primary routes: UK to Vietnam
+    # MAN routes
+    {
+        "origin": "MAN",
+        "destination": "SGN",
+        "origin_city": "Manchester",
+        "dest_city": "Ho Chi Minh City",
+        "distance_miles": 5940,
+        "notes": "No direct. Connects via ME/EU hubs",
+    },
+    {
+        "origin": "MAN",
+        "destination": "HAN",
+        "origin_city": "Manchester",
+        "dest_city": "Hanoi",
+        "distance_miles": 5590,
+        "notes": "No direct. Connects via ME/EU hubs",
+    },
+    {
+        "origin": "MAN",
+        "destination": "BKK",
+        "origin_city": "Manchester",
+        "dest_city": "Bangkok",
+        "distance_miles": 5890,
+        "notes": "No direct. Connects via ME/EU hubs",
+    },
+    {
+        "origin": "SGN",
+        "destination": "MAN",
+        "origin_city": "Ho Chi Minh City",
+        "dest_city": "Manchester",
+        "distance_miles": 5940,
+        "notes": "Return leg",
+    },
+    {
+        "origin": "HAN",
+        "destination": "MAN",
+        "origin_city": "Hanoi",
+        "dest_city": "Manchester",
+        "distance_miles": 5590,
+        "notes": "Return leg",
+    },
+    {
+        "origin": "BKK",
+        "destination": "MAN",
+        "origin_city": "Manchester",
+        "dest_city": "Bangkok",
+        "distance_miles": 5890,
+        "notes": "Return leg",
+    },
+    # LHR routes
     {
         "origin": "LHR",
         "destination": "SGN",
