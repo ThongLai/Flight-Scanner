@@ -1,7 +1,7 @@
 import os
 import time
 import logging
-from datetime import date
+from datetime import date, timezone
 from typing import Optional
 
 import requests
@@ -275,7 +275,7 @@ class FlightScraper:
 
         flights = response.get("data", {}).get("flights", {})
         days = flights.get("days", [])
-        collected_at = datetime.utcnow().isoformat()
+        collected_at = datetime.now(tz=timezone.utc).isoformat()
 
         return [
             {

@@ -1,6 +1,6 @@
 import logging
 import time
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -12,7 +12,7 @@ from data_collection.alert import CollectionReport
 
 logger = logging.getLogger(__name__)
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = PROJECT_ROOT / "data" / "collected"
 CALENDAR_DIR = DATA_DIR / "calendars"
 ITINERARY_DIR = DATA_DIR / "itineraries"
@@ -82,7 +82,7 @@ class DailyCollector:
         records = self.scraper.parse_itineraries(response)
         df = pd.DataFrame(records)
         if not df.empty:
-            df["collected_at"] = datetime.utcnow().isoformat()
+            df["collected_at"] = datetime.now(tz=timezone.utc).isoformat()
             df["search_date"] = depart_date
             keep = [c for c in ITINERARY_KEEP_COLS if c in df.columns]
             df = df[keep]
@@ -105,14 +105,14 @@ class DailyCollector:
         cal_path = CALENDAR_DIR / f"calendars_{today.strftime('%Y-%m-%d')}.parquet"
         if cal_path.exists() and not force:
             logger.info(f"Already collected for {today}, skipping")
-            return
+            return True
         if cal_path.exists() and force:
             logger.warning(
                 "Force re-run: previous data exists. "
                 "Multiple runs per day may trigger API throttling."
             )
 
-        start = datetime.utcnow()
+        start = datetime.now(tz=timezone.utc)
         logger.info(f"Daily collection started at {start.isoformat()}")
 
         report = CollectionReport()
@@ -203,7 +203,7 @@ class DailyCollector:
             all_itin = pd.concat(itinerary_frames, ignore_index=True)
             self._save_parquet(all_itin, ITINERARY_DIR, "itineraries")
 
-        elapsed = (datetime.utcnow() - start).total_seconds()
+        elapsed = (datetime.now(tz=timezone.utc) - start).total_seconds()
         quota = self.scraper.get_quota_status()
         logger.info(
             f"Collection complete in {elapsed:.0f}s. "
