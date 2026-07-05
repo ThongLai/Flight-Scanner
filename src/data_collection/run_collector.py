@@ -27,15 +27,15 @@ def main():
     args = parser.parse_args()
 
     if args.mode == "once":
-        from daily_collector import DailyCollector
+        from data_collection.daily_collector import DailyCollector
         collector = DailyCollector()
         healthy = collector.run(force=args.force)
         if healthy is False:
             sys.exit(1)  # this can trigger GitHub Actions failure email
     else:
-        from scheduler import start_scheduler
+        from data_collection.scheduler import start_scheduler
         start_scheduler()
-        from scheduler import start_scheduler
+        from data_collection.scheduler import start_scheduler
         start_scheduler()
 
 

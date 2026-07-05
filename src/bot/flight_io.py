@@ -5,8 +5,8 @@ import json
 import argparse
 from datetime import datetime
 from dotenv import load_dotenv
-from flights_scraper_sky import FlightsScraperSky
-from telegram_notifier import TelegramNotifier
+from bot.flights_scraper_sky import FlightsScraperSky
+from bot.telegram_notifier import TelegramNotifier
 
 
 load_dotenv()

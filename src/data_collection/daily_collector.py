@@ -6,9 +6,9 @@ from typing import Optional
 
 import pandas as pd
 
-from flight_scraper import FlightScraper
-from routes import TARGET_ROUTES, COLLECTION_CONFIG
-from alert import CollectionReport
+from data_collection.flight_scraper import FlightScraper
+from data_collection.routes import TARGET_ROUTES, COLLECTION_CONFIG
+from data_collection.alert import CollectionReport
 
 logger = logging.getLogger(__name__)
 

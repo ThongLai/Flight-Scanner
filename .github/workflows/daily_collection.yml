@@ -32,10 +32,11 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run collection
+        working-directory: src
         env:
           RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
           RAPIDAPI_HOST: ${{ secrets.RAPIDAPI_HOST }}
-        run: python src/run_collector.py --mode once
+        run: python -m data_collection.run_collector --mode once
 
       - name: Commit and push collected data
         run: |

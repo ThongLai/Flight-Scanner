@@ -4,9 +4,9 @@ import pandas as pd
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
-from flights_scraper_sky import FlightsScraperSky
-from telegram_notifier import TelegramNotifier
-from test_flights_api import save_flights_to_json, load_flights_from_json
+from bot.flights_scraper_sky import FlightsScraperSky
+from bot.telegram_notifier import TelegramNotifier
+from bot.flight_io import save_flights_to_json, load_flights_from_json
 
 load_dotenv()
 

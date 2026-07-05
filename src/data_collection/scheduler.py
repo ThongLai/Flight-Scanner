@@ -3,7 +3,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from dotenv import load_dotenv
 
-from daily_collector import DailyCollector
+from data_collection.daily_collector import DailyCollector
 
 load_dotenv()
 
