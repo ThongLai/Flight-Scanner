@@ -13,10 +13,10 @@ load_dotenv()
 
 def test_api():
     """Test the API with correct structure"""
-    api_key = os.getenv('FLIGHTS_API_KEY')
+    api_key = os.getenv('RAPIDAPI_KEY')
     
     if not api_key:
-        print("Error: FLIGHTS_API_KEY not in .env")
+        print("Error: `RAPIDAPI_KEY` not in `.env`")
         return None, None
     
     print("="*60)
