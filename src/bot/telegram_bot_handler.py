@@ -60,7 +60,7 @@ def validate_args(args, need_date=True, need_range=False):
             return d, None
         except (ValueError, TypeError):
             return None, (
-                f"Date '{s}' is invalid. Use YYYY-MM-DD, "
+                f"Date '{s}' is invalid. Use `yyyy-mm-dd`, "
                 f"e.g. `2026-09-15`."
             )
 
@@ -115,7 +115,7 @@ class FlightBotHandler:
                             ctx: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(
             "*Flight Scanner Bot*\n\n"
-            "ML-powered flight price prediction and optimisation.\n\n"
+            f"**Good {'morning' if 5 <= datetime.now().hour < 12 else 'afternoon' if 12 <= datetime.now().hour < 18 else 'evening'}!** I'm a machine learning model for flight price prediction and optimisation.\n\n"
             "*Commands:*\n"
             "/predict ROUTE DATE(`yyyy-mm-dd`)\n"
             "/window ROUTE START_DATE(`yyyy-mm-dd`) END_DATE(`yyyy-mm-dd`)\n"
@@ -135,7 +135,7 @@ class FlightBotHandler:
         await update.message.reply_text(
             "*Flight Scanner Bot*\n"
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "ML-powered flight price prediction and optimisation.\n\n"
+            "What I can do to help with your flight searches:\n\n"
 
             "*/window ROUTE START END*\n"
             "Ranks the most optimal departure dates in a range.\n"
@@ -228,7 +228,7 @@ class FlightBotHandler:
         route = parsed["route"]
         start, end = parsed["start"], parsed["end"]
 
-        await update.message.reply_text("Searching optimal dates...")
+        await update.message.reply_text("Calculating optimal dates...")
 
         try:
             best = find_best_dates(origin, dest, start, end)
@@ -286,7 +286,7 @@ class FlightBotHandler:
         route = parsed["route"]
         search_date = parsed["date"]
 
-        await update.message.reply_text("Finding optimal flights...")
+        await update.message.reply_text("Calculating optimal flights...")
 
         try:
             pareto = find_pareto_flights(origin, dest, search_date)
