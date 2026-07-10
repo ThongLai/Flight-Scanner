@@ -117,12 +117,15 @@ class FlightBotHandler:
             "*Flight Scanner Bot*\n\n"
             "ML-powered flight price prediction and optimisation.\n\n"
             "*Commands:*\n"
-            "/predict ROUTE YYYY-MM-DD\n"
-            "/window ROUTE START END\n"
-            "/optimise ROUTE YYYY-MM-DD\n"
+            "/predict ROUTE DATE(`yyyy-mm-dd`)\n"
+            "/window ROUTE START_DATE(`yyyy-mm-dd`) END_DATE(`yyyy-mm-dd`)\n"
+            "/optimise ROUTE DATE(`yyyy-mm-dd`)\n"
+            "/track ROUTE DATE(`yyyy-mm-dd`)\n"
+            "/mytracks\n"
+            "/untrack ROUTE DATE(`yyyy-mm-dd`)\n\n"
             "/help\n\n"
             "Type /help for detailed usage.\n\n"
-            "_Maintained by Tom Lai_"
+            "_Maintained by Tom Lai_\n"
             "_Feedback: laiminhthong1@gmail.com_",
             parse_mode="Markdown",
         )
