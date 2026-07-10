@@ -5,6 +5,7 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from ml.predict import predict_flight
 from ml.window import find_best_dates
+from ml.optimise import find_pareto_flights, _skyscanner_link  
 
 
 logging.basicConfig(
@@ -112,6 +113,52 @@ class FlightBotHandler:
         await update.message.reply_text("\n".join(lines),
                                         parse_mode="Markdown")
 
+    async def optimise_command(self, update: Update,
+                              ctx: ContextTypes.DEFAULT_TYPE):
+        """Handle /optimise ROUTE DATE - Pareto-optimal flights."""
+        try:
+            route = ctx.args[0].upper()
+            origin, dest = route.split("-")
+            search_date = ctx.args[1]
+        except (IndexError, ValueError):
+            await update.message.reply_text(
+                "Usage: /optimise LHR-SGN 2026-09-15"
+            )
+            return
+
+        await update.message.reply_text("Finding best flights...")
+
+        try:
+            pareto = find_pareto_flights(origin, dest, search_date)
+        except Exception as e:
+            await update.message.reply_text(f"Error: {e}")
+            return
+
+        if pareto.empty:
+            await update.message.reply_text(
+                "No flights found for that route/date."
+            )
+            return
+
+        source = pareto.attrs.get("source", "collected")
+        link = _skyscanner_link(origin, dest, search_date)
+
+        lines = [f"*Pareto-optimal flights {route}*",
+                 f"_{search_date}_ (source: {source})\n"]
+        for i, row in enumerate(pareto.itertuples(), 1):
+            stops = "direct" if row.stop_count == 0 else f"{row.stop_count} stop(s)"
+            lines.append(
+                f"[{i}. £{row.price_raw:.0f}  {row.duration_hrs}h  {stops}]({link})\n"
+                f"   {row.carrier_names}"
+            )
+
+        await update.message.reply_text(
+            "\n".join(lines),
+            parse_mode="Markdown",
+            disable_web_page_preview=True,
+        )
+
+
 
 def main():
     handler = FlightBotHandler()
@@ -120,7 +167,7 @@ def main():
     app.add_handler(CommandHandler("help", handler.help_command))
     app.add_handler(CommandHandler("predict", handler.predict_command))
     app.add_handler(CommandHandler("window", handler.window_command))
-
+    app.add_handler(CommandHandler("optimise", handler.optimise_command))
     print("Bot running. Press Ctrl+C to stop.")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
 
