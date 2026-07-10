@@ -71,7 +71,11 @@ def predict_flight(route: str, departure_date: str) -> dict:
         _wait_model.predict_proba(clf_row[_meta["clf_features"]])[0, 1]
     )
 
-    action = "Wait" if proba >= _meta["wait_threshold"] else "Book now"
+    action = (
+        "Price predicted to drop"
+        if proba >= _meta["wait_threshold"]
+        else "Price predicted to increase"
+    )
     dist = abs(proba - _meta["wait_threshold"])
     confidence = "High" if dist > 0.25 else "Medium" if dist > 0.10 else "Low"
 
@@ -83,5 +87,8 @@ def predict_flight(route: str, departure_date: str) -> dict:
         "last_observed_price": round(last_price, 2),
         "action": action,
         "confidence": confidence,
+        "wait_probability": round(proba, 4),
+        "wait_threshold": _meta["wait_threshold"],
+        "confidence_distance": round(dist, 4),
         "has_history": len(hist) > 0,
     }
