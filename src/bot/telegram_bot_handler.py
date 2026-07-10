@@ -8,7 +8,11 @@ from telegram.ext import Application, CommandHandler, ContextTypes
 
 from ml.predict import predict_flight
 from ml.window import find_best_dates
-from ml.optimise import find_pareto_flights, _skyscanner_link  
+from ml.optimise import find_pareto_flights, _skyscanner_link
+
+from db.tracks import (init_db, add_track, get_user_tracks,
+                       deactivate_track, get_active_tracks,
+                       update_notified_price)
 
 import difflib
 from telegram.ext import MessageHandler, filters
@@ -98,6 +102,7 @@ def _fmt_duration(hrs: float) -> str:
     m = int(round((hrs - h) * 60))
     return f"{h}h {m}m" if m else f"{h}h"
 
+init_db()
 
 
 class FlightBotHandler:
@@ -141,6 +146,11 @@ class FlightBotHandler:
             "Finds Pareto-optimal live flights (price, duration, stops), "
             "each linked to Skyscanner.\n"
             "`/optimise LHR-SGN 2026-10-15`\n\n"
+            
+            "*/track ROUTE DATE* — track a flight, get drop alerts\n"
+            "`/track LHR-SGN 2026-10-15`\n"
+            "*/mytracks* — list tracked flights\n"
+            "*/untrack ROUTE DATE* — stop tracking\n\n"
 
             "━━━━━━━━━━━━━━━━━━━━\n"
             "*Current Available Routes:* LHR/MAN <-> SGN/HAN/BKK (both directions)\n\n"
@@ -149,7 +159,6 @@ class FlightBotHandler:
             "/optimise for bookable flights.\n\n",
             parse_mode="Markdown",
         )
-
 
     async def predict_command(self, update: Update,
                               ctx: ContextTypes.DEFAULT_TYPE):
@@ -317,6 +326,82 @@ class FlightBotHandler:
             disable_web_page_preview=True,
         )
 
+    async def track_command(self, update, ctx):
+        parsed, error = validate_args(ctx.args, need_date=True)
+        if error:
+            await update.message.reply_text(
+                error + "\n\nExample: `/track LHR-SGN 2026-10-15`",
+                parse_mode="Markdown")
+            return
+        uid = update.effective_user.id
+        origin, dest, date = parsed["origin"], parsed["dest"], parsed["date"]
+        try:
+            best = find_best_dates(origin, dest, date, date)
+            if best.empty:
+                await update.message.reply_text("No current price found.")
+                return
+            baseline = float(best.iloc[0]["price"])
+        except Exception as e:
+            await update.message.reply_text(f"Error: {e}")
+            return
+        add_track(uid, origin, dest, date, baseline)
+        await update.message.reply_text(
+            f"*Tracking {parsed['route']}* on "
+            f"{pd.to_datetime(date).strftime('%d/%m/%Y')}\n"
+            f"Current: £{baseline:.0f}\nYou'll be alerted on drops. "
+            f"/untrack to stop.", parse_mode="Markdown")
+
+    async def mytracks_command(self, update, ctx):
+        tracks = get_user_tracks(update.effective_user.id)
+        if not tracks:
+            await update.message.reply_text("No active tracks. Use /track.")
+            return
+        lines = ["*Your tracked flights*", "━━━━━━━━━━━━━━━━"]
+        for t in tracks:
+            d = pd.to_datetime(str(t["departure_date"])).strftime("%d/%m/%Y")
+            lines.append(f"{t['origin']}-{t['destination']} on {d}\n"
+                         f"  Baseline: £{t['baseline_price']:.0f}")
+        await update.message.reply_text("\n".join(lines),
+                                        parse_mode="Markdown")
+
+    async def untrack_command(self, update, ctx):
+        parsed, error = validate_args(ctx.args, need_date=True)
+        if error:
+            await update.message.reply_text(
+                "Usage: `/untrack LHR-SGN 2026-10-15`",
+                parse_mode="Markdown")
+            return
+        deactivate_track(update.effective_user.id, parsed["origin"],
+                         parsed["dest"], parsed["date"])
+        await update.message.reply_text("Stopped tracking that flight.")
+
+    async def _check_tracks_job(self, ctx):
+        for t in get_active_tracks():
+            origin, dest = t["origin"], t["destination"]
+            date = str(t["departure_date"])
+            if pd.to_datetime(date) < pd.Timestamp.now():
+                deactivate_track(t["user_id"], origin, dest, date)
+                continue
+            try:
+                best = find_best_dates(origin, dest, date, date)
+                if best.empty:
+                    continue
+                current = float(best.iloc[0]["price"])
+            except Exception:
+                continue
+            baseline = t["baseline_price"]
+            drop = (baseline - current) / baseline
+            last = t["last_notified_price"] or baseline
+            if drop >= 0.05 and current < last:
+                await ctx.bot.send_message(
+                    chat_id=t["user_id"], parse_mode="Markdown",
+                    text=(f"*Price Drop Alert*\n{origin}-{dest} on "
+                          f"{pd.to_datetime(date).strftime('%d/%m/%Y')}\n\n"
+                          f"Was £{baseline:.0f} -> now £{current:.0f} "
+                          f"(down {drop * 100:.0f}%)\n\n"
+                          f"/optimise {origin}-{dest} {date} to book."))
+                update_notified_price(t["id"], current)
+
     async def unknown_command(self, update: Update,
                               ctx: ContextTypes.DEFAULT_TYPE):
         """Handle unrecognised commands with a suggestion."""
@@ -343,7 +428,14 @@ def main():
     app.add_handler(CommandHandler("predict", handler.predict_command))
     app.add_handler(CommandHandler("window", handler.window_command))
     app.add_handler(CommandHandler("optimise", handler.optimise_command))
+    
+    app.add_handler(CommandHandler("track", handler.track_command))
+    app.add_handler(CommandHandler("mytracks", handler.mytracks_command))
+    app.add_handler(CommandHandler("untrack", handler.untrack_command))
+        
     app.add_handler(MessageHandler(filters.COMMAND, handler.unknown_command))
+    
+    app.job_queue.run_repeating(handler._check_tracks_job, interval=21600, first=60)
 
     print("Bot running. Press Ctrl+C to stop.")
     app.run_polling(allowed_updates=Update.ALL_TYPES)
