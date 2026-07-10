@@ -118,7 +118,7 @@ class FlightBotHandler:
             f"**Good {'morning' if 5 <= datetime.now().hour < 12 else 'afternoon' if 12 <= datetime.now().hour < 18 else 'evening'}!** I'm a machine learning model for flight price prediction and optimisation.\n\n"
             "*Commands:*\n"
             "/predict ROUTE DATE(`yyyy-mm-dd`)\n"
-            "/window ROUTE START_DATE(`yyyy-mm-dd`) END_DATE(`yyyy-mm-dd`)\n"
+            "/window ROUTE STARTDATE(`yyyy-mm-dd`) ENDDATE(`yyyy-mm-dd`)\n"
             "/optimise ROUTE DATE(`yyyy-mm-dd`)\n"
             "/track ROUTE DATE(`yyyy-mm-dd`)\n"
             "/mytracks\n"
