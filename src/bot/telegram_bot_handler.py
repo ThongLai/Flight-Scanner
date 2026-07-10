@@ -117,8 +117,8 @@ class FlightBotHandler:
             "/optimise ROUTE YYYY-MM-DD\n"
             "/help\n\n"
             "Type /help for detailed usage.\n\n"
-            "_Maintained by Tom Lai — "
-                "feedback: laiminhthong1@gmail.com_",
+            "_Maintained by Tom Lai_"
+            "_Feedback: laiminhthong1@gmail.com_",
             parse_mode="Markdown",
         )
 
