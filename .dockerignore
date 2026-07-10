@@ -1,0 +1,63 @@
+# flyctl launch added from .gitignore
+# Environment variables (IMPORTANT - never commit API keys!)
+**/.env
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/*$py.class
+**/*.so
+**/.Python
+**/env
+**/venv
+**/ENV
+**/.venv
+**/pip-log.txt
+**/pip-delete-this-directory.txt
+
+# IDE
+**/.vscode
+**/.idea
+**/*.swp
+**/*.swo
+**/*~
+
+# OS
+**/.DS_Store
+**/Thumbs.db
+
+# Logs and databases
+**/*.log
+**/*.sql
+**/*.sqlite
+**/plan.md
+**/schedule.md
+
+# Test results
+**/test_results.json
+**/flight_results.json
+**/experiment_notebooks/data
+
+# Distribution / packaging
+**/dist
+**/build
+**/*.egg-info
+
+# flyctl launch added from .venv/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/.gitignore
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/pydevd_frame_evaluator.*.so
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/pydevd_frame_evaluator.*.pyd
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/_pydevd_frame_eval/pydevd_frame_evaluator.pyx
+
+# flyctl launch added from .venv/Lib/site-packages/debugpy/_vendored/pydevd/pydevd_attach_to_process/linux_and_mac/.gitignore
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/pydevd_attach_to_process/linux_and_mac/attach_x86.dylib
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/pydevd_attach_to_process/linux_and_mac/attach_x86_64.dylib
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/pydevd_attach_to_process/linux_and_mac/attach_linux_x86.o
+.venv/Lib/site-packages/debugpy/_vendored/pydevd/pydevd_attach_to_process/linux_and_mac/attach_linux_x86_64.o
+fly.toml
+
+  data/bts/   
+  data/raw/   
+  .venv/      
+  __pycache__/
+  notebooks/  
+  .git/       
