@@ -513,9 +513,13 @@ with tab2:
         max_stops_avail = int(route_itin["stop_count"].max())
 
         with st.container(horizontal=True, vertical_alignment="center"):
+            # max_journeys = st.container(width="content").selectbox(
+            #     "Journeys to show", [4, 8, 12, 20], index=1, accept_new_options=True,
+            #     key="map_top_n")
             max_journeys = st.container(width="content").selectbox(
-                "Journeys to show", [4, 8, 12, 20], index=1, accept_new_options=True,
-                key="map_top_n")
+                "Journeys to show", [4, 8, 12, 20, "All"], index=1,
+                accept_new_options=True, key="map_top_n")
+            max_journeys = int(max_journeys) if max_journeys != "All" else len(route_itin)
             max_stops = st.container(width="content").slider(
                 "Max transits (stops)", 0, max_stops_avail,
                 max_stops_avail, key="map_max_stops")
@@ -523,17 +527,14 @@ with tab2:
                 "Display layers",
                 options=["Flow lines", "Airports", "Labels"],
                 default=["Flow lines", "Airports", "Labels"])
-            direct_only = st.container(width="content").checkbox(
-                "Direct only", value=False, key="map_direct")
 
 
         # Apply the transit filter
         filtered = route_itin[route_itin["stop_count"] <= max_stops]
-        st.table(filtered)
-        if direct_only:
-            filtered = filtered[filtered["is_direct"] == True]
-        st.caption(f"Filtered to journeys with ≤ {max_stops} "
-                   f"transit(s): {len(filtered):,} itineraries")
+        
+        
+        st.caption(f"Filtered to journeys with `≤ {max_stops}` "
+                   f"transit(s): `{len(filtered):,}` itineraries")
 
         if filtered.empty:
             st.warning("No journeys match the transit filter.")
