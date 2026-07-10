@@ -12,3 +12,4 @@ APScheduler==3.11.2
 lightgbm==4.6.0
 pymoo==0.6.2
 psycopg2-binary==2.9.12
+plotly==6.9.0
