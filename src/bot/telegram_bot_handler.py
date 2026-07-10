@@ -143,14 +143,10 @@ class FlightBotHandler:
             "`/optimise LHR-SGN 2026-10-15`\n\n"
 
             "━━━━━━━━━━━━━━━━━━━━\n"
-            "*Routes:* LHR/MAN <-> SGN/HAN/BKK (both directions)\n\n"
+            "*Current Available Routes:* LHR/MAN <-> SGN/HAN/BKK (both directions)\n\n"
 
             "*Tip:* /window to find dates, /predict for price outlook, "
-            "/optimise for bookable flights.\n\n"
-
-            "_/predict & /window: model predictions · "
-            "/optimise: live prices_\n"
-            "_By @thonglai · laiminhthong1@gmail.com_",
+            "/optimise for bookable flights.\n\n",
             parse_mode="Markdown",
         )
 

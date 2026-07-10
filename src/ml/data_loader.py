@@ -8,17 +8,49 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 COLLECTED = PROJECT_ROOT / "data" / "collected"
 
 
-def load_all_calendars() -> pd.DataFrame:
-    """Load and combine every daily calendar Parquet file."""
-    files = sorted((COLLECTED / "calendars").glob("*.parquet"))
-    df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
+# def load_all_calendars() -> pd.DataFrame:
+#     """Load and combine every daily calendar Parquet file."""
+#     files = sorted((COLLECTED / "calendars").glob("*.parquet"))
+#     df = pd.concat([pd.read_parquet(f) for f in files], ignore_index=True)
 
-    df["collected_at"] = pd.to_datetime(df["collected_at"])
-    df["departure_date"] = pd.to_datetime(df["departure_date"])
+#     df["collected_at"] = pd.to_datetime(df["collected_at"])
+#     df["departure_date"] = pd.to_datetime(df["departure_date"])
+#     df["collected_date"] = df["collected_at"].dt.normalize()
+#     df["days_ahead"] = (df["departure_date"] - df["collected_date"]).dt.days
+
+#     return df[df["days_ahead"] >= 0]
+
+
+def load_all_calendars(columns: list | None = None) -> pd.DataFrame:
+    files = sorted((COLLECTED / "calendars").glob("*.parquet"))
+
+    read_cols = None
+    if columns is not None:
+        needed = set(columns) | {"collected_at", "departure_date"}
+        read_cols = list(needed)
+
+    df = pd.concat(
+        [pd.read_parquet(f, columns=read_cols) for f in files],
+        ignore_index=True,
+    )
+
+    df["collected_at"] = pd.to_datetime(
+        df["collected_at"], format="ISO8601", utc=True
+    ).dt.tz_localize(None)
+    df["departure_date"] = pd.to_datetime(
+        df["departure_date"], format="ISO8601", utc=True
+    ).dt.tz_localize(None)
+
     df["collected_date"] = df["collected_at"].dt.normalize()
     df["days_ahead"] = (df["departure_date"] - df["collected_date"]).dt.days
+    df = df[df["days_ahead"] >= 0]
 
-    return df[df["days_ahead"] >= 0]
+    if columns is not None:
+        keep = list(dict.fromkeys(
+            columns + ["days_ahead", "collected_date"]
+        ))
+        return df[keep]
+    return df
 
 
 def load_all_itineraries(columns: list[str] | None = None) -> pd.DataFrame:
