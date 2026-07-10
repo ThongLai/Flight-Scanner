@@ -1,12 +1,16 @@
+import streamlit as st
+import pandas as pd
+from datetime import datetime
 import json
 import sys
 from pathlib import Path
-
-import pandas as pd
+import re
+import plotly.graph_objects as go
 import plotly.express as px
-import streamlit as st
+import pydeck as pdk
 
-from datetime import datetime
+
+
 
 
 # Make src/ importable
@@ -20,7 +24,7 @@ from ml.optimise import find_pareto_flights
 ROOT = Path(__file__).resolve().parents[1]
 MODELS_DIR = ROOT / "models"
 
-st.set_page_config(page_title="Flight Scanner Dashboard", layout="wide", page_icon="✈")
+st.set_page_config(page_title="Flight Price Prediction", layout="wide", page_icon="✈")
 
 # ---- Shared plot styling ----
 ACCENT = "#2E86AB"
@@ -139,10 +143,7 @@ AIRPORTS = {
 
 
 
-import plotly.graph_objects as go
 
-import re
-import pydeck as pdk
 
 
 def build_flight_arcs(route_itin: pd.DataFrame, sel_route: str, max_journeys: int = 8):
@@ -272,98 +273,18 @@ def build_flight_map(route_itin, sel_route, selected_layers, max_journeys=8):
 
 
 
-def build_route_map(pareto: pd.DataFrame, max_flights: int = 5):
-    """Draw flight journeys (origin -> transits -> dest) on a world map."""
-    fig = go.Figure()
-    colors = px.colors.qualitative.Bold
-    plotted_airports = {}
-    missing = set()   # track codes without coordinates
-
-    for i, row in enumerate(pareto.head(max_flights).itertuples()):
-        route_str = getattr(row, "segment_route", None) or \
-                    getattr(row, "route", "")
-        stops = [s.strip() for s in str(route_str).replace("->", ">")
-                 .split(">") if s.strip()]
-
-        lats, lons = [], []
-        for code in stops:
-            if code not in AIRPORTS:
-                missing.add(code)
-                continue        # skip this stop, keep the others
-            lat, lon = AIRPORTS[code]
-            lats.append(lat)
-            lons.append(lon)
-            plotted_airports[code] = (lat, lon)
-        if len(lats) < 2:        # need at least 2 points to draw a line
-            continue
-
-        color = colors[i % len(colors)]
-        price = getattr(row, "price_raw", 0)
-        carrier = getattr(row, "carrier_names", "")
-
-        fig.add_trace(go.Scattergeo(
-            lat=lats, lon=lons, mode="lines",
-            line=dict(width=2, color=color),
-            opacity=0.7,
-            name=f"£{price:.0f} · {carrier}",
-            hovertext=" → ".join(stops),
-            hoverinfo="text+name",
-        ))
-
-    if plotted_airports:
-        codes = list(plotted_airports)
-        fig.add_trace(go.Scattergeo(
-            lat=[plotted_airports[c][0] for c in codes],
-            lon=[plotted_airports[c][1] for c in codes],
-            mode="markers+text",
-            text=codes, textposition="top center",
-            marker=dict(size=7, color="#2E86AB",
-                        line=dict(width=1, color="white")),
-            name="Airports", hoverinfo="text",
-        ))
-
-    # fig.update_layout(
-    #     template=TEMPLATE, height=520,
-    #     margin=dict(l=0, r=0, t=40, b=0),
-    #     title="Flight Journeys — origin, transits, destination",
-    #     legend=dict(orientation="h", y=-0.05),
-    #     geo=dict(
-    #         projection_type="natural earth",
-    #         showland=True, landcolor="#F5F5F0",
-    #         showcountries=True, countrycolor="#DDDDDD",
-    #         showocean=True, oceancolor="#EAF4FB",
-    #         resolution=50,
-    #     ),
-    # )
-    
-    fig.update_layout(
-        template=TEMPLATE, height=520,
-        margin=dict(l=0, r=0, t=40, b=0),
-        title="Flight Journeys — origin, transits, destination",
-        legend=dict(orientation="h", y=-0.05),
-        geo=dict(
-            showland=True,
-            showcountries=True,
-            showocean=True,
-            resolution=50,
-            fitbounds="locations",   # auto-zoom to plotted airports
-        ),
-    )
-    return fig, missing   # return missing codes too
 
 
 
-
-
-
-
-
-st.title("Flight Scanner Model Dashboard")
+st.title("Flight Price Prediction - Model Performance Dashboard")
 st.caption(
-    "Multi-Objective Model (MOM) for flight price prediction and optimisation  "
+    "This dashboard display the performance and analysis of the Multi-Objective Model (MOM) for flight price prediction and optimisation  "
+    "\nThe bot chat are available to use on **Telegram**: ***[Flight Scanner Chatbot](https://t.me/tom_flight_scanner_bot)*** by ***[Tom Lai](https://github.com/ThongLai)***   "
+    
     "\n**Models:** CNN (price behaviour)  "
     "\n**Optimiser:** NSGA-II (`pymoo`)  "
     "\n**Current Available Routes:** `LHR`, `MAN` <-> `SGN`, `HAN`, `BKK`  "
+    "\n**Technical Details:** [Flight_Price_Prediction_and_Optimisation.pdf](https://mozilla.github.io/pdf.js/web/viewer.html?file=https://raw.githubusercontent.com/ThongLai/Flight-Scanner/main/docs/technical_document/Flight_Price_Prediction_and_Optimisation.pdf)"
 )
 
 if st.button("Refetch", type='primary', icon=":material/cloud_sync:"):
