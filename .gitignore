@@ -41,3 +41,6 @@ experiment_notebooks/data
 dist/
 build/
 *.egg-info/
+
+
+.agents
